@@ -1,0 +1,41 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Jupyter Notebook checkpoint
+.ipynb_checkpoints/
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# dotenv
+.env
+.env.*
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Log and data directories
+logs/
+data/
+*.log
+
+# Pytest / coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Docker volumes (if using bind-mounts)
+volumes/
+
+jars/*.jar

@@ -1,0 +1,9 @@
+# ./Dockerfile.jupyter
+FROM jupyter/pyspark-notebook:latest
+
+USER root
+
+# Copy jar dependencies into spark jars directory
+COPY ./jars/* /usr/local/spark/jars/
+
+USER $NB_UID
