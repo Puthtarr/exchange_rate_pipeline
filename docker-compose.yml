@@ -12,6 +12,8 @@ services:
     command: server /data --console-address ":9001"
     env_file:
       - .env
+    networks:
+      - dev-net
 
   spark:
     image: bitnami/spark:latest
@@ -27,6 +29,8 @@ services:
     command: tail -f /dev/null
     env_file:
       - .env
+    networks:
+      - dev-net
 
   spark-notebook:
     build:
@@ -40,9 +44,25 @@ services:
       - ./src:/home/jovyan/src
     environment:
       - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - dev-net
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: always
     env_file:
       - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dev-net
+
+volumes:
+  pgdata:
 
 networks:
-  default:
-    name: dev-net
+  dev-net:
+    driver: bridge

@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import boto3
 import logging
 import itertools
 from dotenv import load_dotenv
@@ -84,6 +85,17 @@ def load_json_from_minio(spark, bucket_name: str, prefix: str):
 
     cleaned_df = clean_exchange_rate_df(exploded_df)
 
+    # Old Version
+    # output_path = f"s3a://{bucket_name}/validated/exchange_rate_{date}.csv"
+    # try:
+    #     cleaned_df.write.mode("overwrite").option("header", True).csv(output_path)
+    #     logging.info(f"Successfully wrote cleaned data to {output_path}")
+    #
+    #     return cleaned_df
+    # except Exception as e:
+    #     logging.error(f"Failed to write CSV: {e}")
+    #     raise
+
     output_path = f"s3a://{bucket_name}/validated/exchange_rate_{date}.csv"
     try:
         cleaned_df.write.mode("overwrite").option("header", True).csv(output_path)
@@ -93,23 +105,6 @@ def load_json_from_minio(spark, bucket_name: str, prefix: str):
     except Exception as e:
         logging.error(f"Failed to write CSV: {e}")
         raise
-
-
-# def upload_clean_to_postgre(clean_df):
-#     pg_url = f"jdbc:postgresql://local-postgres:5432/{os.getenv('POSTGRES_DB')}"
-#     pg_properties = {
-#         "user": os.getenv("POSTGRES_USER"),
-#         "password": os.getenv("POSTGRES_PASSWORD"),
-#         "driver": "org.postgresql.Driver"
-#     }
-#
-#     # เขียนเข้า PostgreSQL
-#     clean_df.write.jdbc(
-#         url=pg_url,
-#         table="exchange_rate",  # ชื่อตาราง
-#         mode="overwrite",  # หรือใช้ 'append'
-#         properties=pg_properties
-#     )
 
 # -------------------------------
 # Entry Point

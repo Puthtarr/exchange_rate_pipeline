@@ -83,7 +83,7 @@ def remove_local_file():
 
 
 if __name__ == "__main__":
-    # sample_file = os.path.join(raw_data, f"exchange_rate_{date}.json")
-    # upload_to_minio(sample_file, "exchange.rate")
+    sample_file = os.path.join(raw_data, f"exchange_rate_{date}.json")
+    upload_to_minio(sample_file, "exchange.rate")
     remove_local_file()
 
