@@ -5,6 +5,7 @@ import boto3
 import logging
 import itertools
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DoubleType
 from pyspark.sql.functions import col, lit, create_map, expr, trim, to_date, to_timestamp
@@ -106,9 +107,41 @@ def load_json_from_minio(spark, bucket_name: str, prefix: str):
         logging.error(f"Failed to write CSV: {e}")
         raise
 
+def rename_file_in_minio(bucket, folder_path, old_filename_prefix="part-", new_filename=""):
+    # Connect to MinIO (as S3)
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="http://localhost:9000",
+        aws_access_key_id=os.getenv('MINIO_ACCESS_KEY'),
+        aws_secret_access_key=os.getenv('MINIO_SECRET_KEY'),
+    )
+
+    # List all files in the folder
+    response = s3.list_objects_v2(Bucket=bucket, Prefix=folder_path)
+    for obj in response.get("Contents", []):
+        key = obj["Key"]
+        if key.startswith(f"{folder_path}/{old_filename_prefix}"):
+            new_key = f"{folder_path}/{new_filename}"
+            print(f"Renaming: {key} ➡ {new_key}")
+
+            # Copy + Delete
+            s3.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=new_key)
+            s3.delete_object(Bucket=bucket, Key=key)
+            print("Rename success.")
+            return
+
+    print("No file found with that prefix.")
+
+
 # -------------------------------
 # Entry Point
 # -------------------------------
 if __name__ == "__main__":
-    spark = create_spark_session()
-    load_json_from_minio(spark, bucket_name="exchange.rate", prefix="raw_json")
+    # spark = create_spark_session()
+    # load_json_from_minio(spark, bucket_name="exchange.rate", prefix="raw_json")
+
+    rename_file_in_minio(
+        bucket="exchange.rate",
+        folder_path="validated/exchange_rate_2025-06-11.csv",
+        new_filename="exchange_rate_2025-06-11.csv"
+    )

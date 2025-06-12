@@ -80,5 +80,5 @@ def upload_to_postgres(csv_path: str, table_name: str, day: str):
     logging.info("Upload to PostgreSQL completed.")
 
 # Example usage:
-upload_to_postgres("s3://exchange.rate/validated/exchange_rate_2025-06-12.csv/part-00000-957aa075-171f-4332-a7bc-30dc68ba5616-c000.csv", "exchange_rate", "2025-06-12")
+upload_to_postgres("s3://exchange.rate/validated/exchange_rate_2025-06-11.csv/exchange_rate_2025-06-11.csv", "exchange_rate", "2025-06-12")
 # 'exchange.rate/validated/exchange_rate_2025-06-12.csv/part-00000-957aa075-171f-4332-a7bc-30dc68ba5616-c000.csv'
