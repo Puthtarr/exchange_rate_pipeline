@@ -77,7 +77,7 @@ def upload_to_postgres(csv_path: str, table_name: str, day: str):
     db.execute(f"DELETE FROM postgres.public.{table_name} WHERE date = DATE '{day}';")
     db.execute(f"INSERT INTO postgres.public.{table_name} SELECT * FROM df_to_insert;")
 
-    logging.info("✅ Upload to PostgreSQL completed.")
+    logging.info("Upload to PostgreSQL completed.")
 
 # Example usage:
 upload_to_postgres("s3://exchange.rate/validated/exchange_rate_2025-06-12.csv/part-00000-957aa075-171f-4332-a7bc-30dc68ba5616-c000.csv", "exchange_rate", "2025-06-12")
