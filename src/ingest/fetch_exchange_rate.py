@@ -14,7 +14,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def fetch_exchage_rate():
+def fetch_exchange_rate():
 
     print(f'Date : {date}')
     url = f"https://api.currencyfreaks.com/v2.0/rates/latest?apikey={os.getenv('CURRENCY_FREAK_API_KEY')}"
@@ -42,4 +42,4 @@ def fetch_exchage_rate():
 
 
 if __name__ == "__main__":
-    fetch_exchage_rate()
+    fetch_exchange_rate()

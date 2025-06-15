@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  # ===================== MINIO =====================
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -13,8 +14,9 @@ services:
     env_file:
       - .env
     networks:
-      - dev-net
+      - default
 
+  # ===================== SPARK =====================
   spark:
     image: bitnami/spark:latest
     container_name: spark
@@ -30,7 +32,7 @@ services:
     env_file:
       - .env
     networks:
-      - dev-net
+      - default
 
   spark-notebook:
     build:
@@ -45,8 +47,9 @@ services:
     environment:
       - JUPYTER_ENABLE_LAB=yes
     networks:
-      - dev-net
+      - default
 
+  # ===================== POSTGRES (Project) =====================
   postgres:
     image: postgres:13
     container_name: postgres
@@ -58,11 +61,104 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - dev-net
+      - default
+
+  # ===================== REDIS (Airflow) =====================
+  airflow-redis:
+    image: redis:latest
+    container_name: airflow-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - airflow
+
+  # ===================== POSTGRES (Airflow) =====================
+  airflow-postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    networks:
+      - airflow
+
+  # ===================== AIRFLOW SERVICES =====================
+  airflow-webserver:
+    image: apache/airflow:2.7.3-python3.10
+    container_name: airflow-webserver
+    restart: always
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://airflow-redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - PYTHONPATH=/opt/airflow/src
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    command: webserver
+    networks:
+      - airflow
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.3-python3.10
+    container_name: airflow-scheduler
+    restart: always
+    depends_on:
+      - airflow-webserver
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://airflow-redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - PYTHONPATH=/opt/airflow/src
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    command: scheduler
+    networks:
+      - airflow
+
+  airflow-worker:
+    image: apache/airflow:2.7.3-python3.10
+    container_name: airflow-worker
+    restart: always
+    depends_on:
+      - airflow-webserver
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://airflow-redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - PYTHONPATH=/opt/airflow/src
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    command: celery worker
+    networks:
+      - airflow
 
 volumes:
   pgdata:
+  airflow_postgres_data:
 
 networks:
-  dev-net:
-    driver: bridge
+  default:
+    name: dev-net
+  airflow:
+    name: airflow-net
