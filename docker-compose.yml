@@ -87,12 +87,16 @@ services:
 
   # ===================== AIRFLOW SERVICES =====================
   airflow-webserver:
-    image: apache/airflow:2.7.3-python3.10
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     container_name: airflow-webserver
     restart: always
     depends_on:
       - airflow-postgres
       - airflow-redis
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
@@ -112,11 +116,15 @@ services:
       - airflow
 
   airflow-scheduler:
-    image: apache/airflow:2.7.3-python3.10
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     container_name: airflow-scheduler
     restart: always
     depends_on:
       - airflow-webserver
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
@@ -133,11 +141,15 @@ services:
       - airflow
 
   airflow-worker:
-    image: apache/airflow:2.7.3-python3.10
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     container_name: airflow-worker
     restart: always
     depends_on:
       - airflow-webserver
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
