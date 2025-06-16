@@ -13,8 +13,17 @@ from pyspark.sql.functions import col, lit, create_map, expr, trim, to_date, to_
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from src.settings import raw_data, date, log_dir
 
+from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
+
 
 load_dotenv()
+
+# ชี้ไปหา .env ตรง ๆ
+env_path = find_dotenv()
+print("🟢 .env path loaded:", env_path)
+load_dotenv(dotenv_path=env_path)
+
 
 # Setup logging (local)
 logging.basicConfig(
@@ -137,11 +146,11 @@ def rename_file_in_minio(bucket, folder_path, old_filename_prefix="part-", new_f
 # Entry Point
 # -------------------------------
 if __name__ == "__main__":
-    # spark = create_spark_session()
-    # load_json_from_minio(spark, bucket_name="exchange.rate", prefix="raw_json")
+    spark = create_spark_session()
+    load_json_from_minio(spark, bucket_name="exchange.rate", prefix="raw_json")
 
-    rename_file_in_minio(
-        bucket="exchange.rate",
-        folder_path="validated/exchange_rate_2025-06-11.csv",
-        new_filename="exchange_rate_2025-06-11.csv"
-    )
+    # rename_file_in_minio(
+    #     bucket="exchange.rate",
+    #     folder_path="validated/exchange_rate_2025-06-17.csv",
+    #     new_filename="exchange_rate_2025-06-17.csv"
+    # )
