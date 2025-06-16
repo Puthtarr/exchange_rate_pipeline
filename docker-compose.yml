@@ -44,6 +44,8 @@ services:
     volumes:
       - ./data:/home/jovyan/data
       - ./src:/home/jovyan/src
+    env_file:
+      - .env
     environment:
       - JUPYTER_ENABLE_LAB=yes
     networks:
