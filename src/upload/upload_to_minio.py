@@ -1,10 +1,20 @@
 import os
 import logging
-from src.settings import log_dir, raw_data, date
+# from src.settings import log_dir, raw_data, date
 import boto3
 from dotenv import load_dotenv
 from botocore.exceptions import NoCredentialsError,ClientError
 import glob
+from datetime import datetime
+
+date = datetime.now().strftime('%Y-%m-%d')
+project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+data_dir = os.path.join(project_dir, "data")
+log_dir = os.path.join(project_dir, 'logging')
+raw_data = os.path.join(data_dir, 'raw')
+os.makedirs(data_dir, exist_ok=True)
+os.makedirs(log_dir, exist_ok=True)
+os.makedirs(raw_data, exist_ok=True)
 
 # load ENV
 load_dotenv()

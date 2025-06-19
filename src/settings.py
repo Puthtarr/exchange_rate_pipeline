@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 
 
@@ -16,3 +17,5 @@ os.makedirs(raw_data, exist_ok=True)
 os.makedirs(clean_data, exist_ok=True)
 
 date = datetime.now().strftime('%Y-%m-%d')
+log_dir = os.path.join(project_dir, 'logging')
+raw_data = os.path.join(data_dir, 'raw')

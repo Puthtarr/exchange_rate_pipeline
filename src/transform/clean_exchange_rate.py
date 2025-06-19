@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import time
+
 import boto3
 import logging
 import itertools
@@ -15,6 +17,7 @@ from src.settings import raw_data, date, log_dir
 
 from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
+from datetime import datetime
 
 
 load_dotenv()
@@ -120,7 +123,7 @@ def rename_file_in_minio(bucket, folder_path, old_filename_prefix="part-", new_f
     # Connect to MinIO (as S3)
     s3 = boto3.client(
         "s3",
-        endpoint_url="http://localhost:9000",
+        endpoint_url="http://minio:9000",
         aws_access_key_id=os.getenv('MINIO_ACCESS_KEY'),
         aws_secret_access_key=os.getenv('MINIO_SECRET_KEY'),
     )
@@ -149,8 +152,10 @@ if __name__ == "__main__":
     spark = create_spark_session()
     load_json_from_minio(spark, bucket_name="exchange.rate", prefix="raw_json")
 
-    # rename_file_in_minio(
-    #     bucket="exchange.rate",
-    #     folder_path="validated/exchange_rate_2025-06-17.csv",
-    #     new_filename="exchange_rate_2025-06-17.csv"
-    # )
+    time.sleep(3)
+
+    rename_file_in_minio(
+        bucket="exchange.rate",
+        folder_path=f"validated/exchange_rate_{date}.csv",
+        new_filename=f"exchange_rate_{date}.csv"
+    )

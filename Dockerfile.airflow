@@ -1,7 +1,10 @@
 FROM apache/airflow:2.7.3-python3.10
 
-# ใช้ user airflow ตั้งแต่ต้น
 USER airflow
 
-# ติดตั้ง duckdb
-RUN pip install --no-cache-dir duckdb
+# ✅ ติดตั้งด้วย user airflow เท่านั้น
+RUN pip install --no-cache-dir \
+    pandas \
+    duckdb \
+    pyspark \
+    python-dotenv
