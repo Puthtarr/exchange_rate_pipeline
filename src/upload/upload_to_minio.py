@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from botocore.exceptions import NoCredentialsError,ClientError
 import glob
 from datetime import datetime
+import socket
 
 date = datetime.now().strftime('%Y-%m-%d')
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -26,13 +27,23 @@ logging.basicConfig(
     format="%(asctime)s - [%(levelname)s] - %(message)s"
 )
 
+def can_connect(host, port):
+    try:
+        with socket.create_connection((host, int(port)), timeout=2):
+            return True
+    except:
+        return False
+
 def get_minio_client():
-    required_env = ["MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_USE_SSL"]
+    required_env = ["MINIO_ENDPOINT_AIRFLOW", "MINIO_ENDPOINT_LOCAL", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_USE_SSL"]
     missing = [var for var in required_env if os.getenv(var) is None]
     if missing:
         raise EnvironmentError(f"Missing required environment variables: {', '.join(missing)}")
 
-    endpoint = os.getenv("MINIO_ENDPOINT")
+    mode = "LOCAL" if can_connect("localhost", 9000) else "AIRFLOW"
+    print(f"Mode : {mode}")
+
+    endpoint = os.getenv(f"MINIO_ENDPOINT_{mode}")
     access_key = os.getenv("MINIO_ACCESS_KEY")
     secret_key = os.getenv("MINIO_SECRET_KEY")
     use_ssl = os.getenv("MINIO_USE_SSL").lower() == "true"
@@ -96,4 +107,3 @@ if __name__ == "__main__":
     sample_file = os.path.join(raw_data, f"exchange_rate_{date}.json")
     upload_to_minio(sample_file, "exchange.rate")
     remove_local_file()
-

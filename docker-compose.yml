@@ -47,20 +47,8 @@ services:
       - ./src:/home/jovyan/src
     environment:
       - JUPYTER_ENABLE_LAB=yes
-      # ---- MINIO ----
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-      - MINIO_BUCKET=exchange.rate
-      - MINIO_ENDPOINT_LOCAL=localhost:9000
-      - MINIO_ENDPOINT_AIRFLOW=minio:9000
-      # ---- POSTGRES ----
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=exchange_db
-      - POSTGRES_HOST_LOCAL=localhost
-      - POSTGRES_PORT_LOCAL=5432
-      - POSTGRES_HOST_AIRFLOW=postgres
-      - POSTGRES_PORT_AIRFLOW=5432
+    env_file:
+      - .env
     networks:
       - default
 

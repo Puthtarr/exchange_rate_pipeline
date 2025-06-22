@@ -20,7 +20,7 @@ def can_connect(host, port):
 from dotenv import load_dotenv  # <- ไม่จำเป็นอีกต่อไป, ลบได้
 
 def load_env():
-    # ไม่ต้อง load_dotenv()
+    load_dotenv()
     mode = "LOCAL" if can_connect("localhost", 9000) else "AIRFLOW"
     print(f"⚙️ Running in {mode} mode")
 
@@ -100,9 +100,59 @@ def upload_to_postgres(csv_path: str, table_name: str):
     db.execute(f"INSERT INTO postgres.public.{table_name} SELECT * FROM df_to_insert;")
 
     logging.info("Upload to PostgreSQL completed.")
+    return df
+
+def upload_to_supabase(df: pd.DataFrame, table_name: str):
+    load_dotenv()
+    config = {
+        "HOST": os.getenv("SUPABASE_HOST"),
+        "PORT": os.getenv("SUPABASE_PORT"),
+        "USER": os.getenv("SUPABASE_USER"),
+        "PASSWORD": os.getenv("SUPABASE_PASSWORD"),
+        "DB": os.getenv("SUPABASE_DB"),
+    }
+
+    missing = [k for k, v in config.items() if not v]
+    if missing:
+        raise EnvironmentError(f"Missing Supabase config: {missing}")
+
+    conn_str = (
+        f"postgresql://{config['USER']}:{config['PASSWORD']}"
+        f"@{config['HOST']}:{config['PORT']}/{config['DB']}"
+    )
+
+    db = duckdb.connect()
+    db.execute("INSTALL postgres;")
+    db.execute("LOAD postgres;")
+    db.execute(f"ATTACH '{conn_str}' AS supabase (TYPE postgres);")
+
+    # สร้างตารางถ้ายังไม่มี
+    db.execute(f"""
+        CREATE TABLE IF NOT EXISTS supabase.public.{table_name} (
+            date DATE,
+            base TEXT,
+            currency TEXT,
+            rate FLOAT
+        );
+    """)
+
+    db.register("df_to_insert", df)
+
+    # ลบข้อมูลวันซ้ำ
+    dates = tuple(df["date"].unique())
+    date_list = ",".join([f"'{d}'" for d in dates])
+    db.execute(f"""
+        DELETE FROM supabase.public.{table_name}
+        WHERE date IN ({date_list});
+    """)
+
+    db.execute(f"INSERT INTO supabase.public.{table_name} SELECT * FROM df_to_insert;")
+    print("\u2705 Upload to Supabase completed.")
 
 if __name__ == "__main__":
-    upload_to_postgres(
-        "s3://exchange.rate/validated/exchange_rate_2025-06-17.csv/exchange_rate_2025-06-17.csv",
+    df = upload_to_postgres(
+        f"s3://exchange.rate/validated/exchange_rate_{date}.csv/exchange_rate_{date}.csv",
         "exchange_rate"
     )
+
+    upload_to_supabase(df, "exchange_rate")
